@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Netty,Netty in action,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Netty之ByteBuf本文内容主要参考&amp;lt;\&amp;gt;,偏笔记向. 网络编程中,字节缓冲区是一个比较基本的组件.Java NIO提供了ByteBuffer,但是使用过的都知道ByteBuffer对于读写数据操作还是有些麻烦的,切换读写状态需要flip().Netty框架对字节缓冲区进行了封装,名称是ByteBuf,相较于ByteBuffer更灵活. 1.ByteBuf特点概览 用户可以自定义">
+<meta name="keywords" content="Netty,Netty in action">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Netty之ByteBuf">
+<meta property="og:url" content="http://yoursite.com/2019/04/18/Netty之ByteBuf/index.html">
+<meta property="og:site_name" content="Tikko&#39;s Blog">
+<meta property="og:description" content="Netty之ByteBuf本文内容主要参考&amp;lt;\&amp;gt;,偏笔记向. 网络编程中,字节缓冲区是一个比较基本的组件.Java NIO提供了ByteBuffer,但是使用过的都知道ByteBuffer对于读写数据操作还是有些麻烦的,切换读写状态需要flip().Netty框架对字节缓冲区进行了封装,名称是ByteBuf,相较于ByteBuffer更灵活. 1.ByteBuf特点概览 用户可以自定义">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/F82D62BF4B9E4AD8BCF6F9F9B63D29E1?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
+<meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/E6A068B1C5CB4A949911943A989D9892?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
+<meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/B261AE020F7B48D386C6E6F20E33AD75?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
+<meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/CF647FAEE0C642CABCFC1329454F9A3C?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
+<meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/FD2B630F7AFF4B8C85E86467EFE53765?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
+<meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/64A587980C8748B5AFA674BCF223D953?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
+<meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/44DF026ABA3545C5AC63D096043BF880?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
+<meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/7762FDB1C0854B519C65B6DD9C1B53E7?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
+<meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/758F1B1A5A6F4D238012C7F79A0B7BC6?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
+<meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/F05DD429F5E144C5B3175CF96E572539?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
+<meta property="og:updated_time" content="2019-04-18T03:26:28.866Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Netty之ByteBuf">
+<meta name="twitter:description" content="Netty之ByteBuf本文内容主要参考&amp;lt;\&amp;gt;,偏笔记向. 网络编程中,字节缓冲区是一个比较基本的组件.Java NIO提供了ByteBuffer,但是使用过的都知道ByteBuffer对于读写数据操作还是有些麻烦的,切换读写状态需要flip().Netty框架对字节缓冲区进行了封装,名称是ByteBuf,相较于ByteBuffer更灵活. 1.ByteBuf特点概览 用户可以自定义">
+<meta name="twitter:image" content="https://note.youdao.com/yws/api/personal/file/F82D62BF4B9E4AD8BCF6F9F9B63D29E1?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/04/18/Netty之ByteBuf/">
+
+
+
+
+
+  <title>Netty之ByteBuf | Tikko's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tikko's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/18/Netty之ByteBuf/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Tikko">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tikko's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Netty之ByteBuf</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-18T11:25:27+08:00">
+                2019-04-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/" itemprop="url" rel="index">
+                    <span itemprop="name">网络</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="Netty之ByteBuf"><a href="#Netty之ByteBuf" class="headerlink" title="Netty之ByteBuf"></a>Netty之ByteBuf</h2><p>本文内容主要参考<strong>&lt;\<netty in action\>&gt;</netty></strong>,偏笔记向.</p>
+<p>网络编程中,字节缓冲区是一个比较基本的组件.Java NIO提供了<code>ByteBuffer</code>,但是使用过的都知道<code>ByteBuffer</code>对于读写数据操作还是有些麻烦的,切换读写状态需要<code>flip()</code>.<strong>Netty</strong>框架对字节缓冲区进行了封装,名称是<code>ByteBuf</code>,相较于<code>ByteBuffer</code>更灵活.</p>
+<h3 id="1-ByteBuf特点概览"><a href="#1-ByteBuf特点概览" class="headerlink" title="1.ByteBuf特点概览"></a>1.ByteBuf特点概览</h3><ul>
+<li>用户可以自定义缓冲区类型对其扩展</li>
+<li>通过内置的符合缓冲区类型实现了透明的零拷贝</li>
+<li>容量可以按需增长(类似<code>StringBuilder</code>)</li>
+<li>切换读写模式不用调用<code>flip()</code>方法</li>
+<li>读写使用各自的索引</li>
+<li>支持方法的链式调用</li>
+<li>支持引用计数</li>
+<li>支持池化</li>
+</ul>
+<h3 id="2-ByteBuf类介绍"><a href="#2-ByteBuf类介绍" class="headerlink" title="2.ByteBuf类介绍"></a>2.ByteBuf类介绍</h3><h4 id="2-1工作模式"><a href="#2-1工作模式" class="headerlink" title="2.1工作模式"></a>2.1工作模式</h4><p><code>ByteBuf</code>维护了两个指针,一个用于读取(<code>readerIndex</code>),一个用于写入(<code>writerIndex</code>).</p>
+<p>使用<strong>ByteBuf的API</strong>中的<code>read*</code>方法读取数据时,<code>readerIndex</code>会根据读取字节数向后移动,但是<code>get*</code>方法不会移动<code>readerIndex</code>;使用<code>write*</code>数据时,<code>writerIndex</code>会根据字节数移动,但是<code>set*</code>方法不会移动<code>writerIndex</code>.(<code>read*</code>表示<code>read</code>开头的方法,其余意义相同)</p>
+<p>读取数据时,如果<code>readerIndex</code>超过了<code>writerIndex</code>会触发<code>IndexOutOfBoundsException</code>.</p>
+<p>可以指定<code>ByteBuf</code>容量最大值,<code>capacity(int)</code>或<code>ensureWritable(int)</code>,当超出容量时会抛出异常.</p>
+<h4 id="2-2使用模式"><a href="#2-2使用模式" class="headerlink" title="2.2使用模式"></a>2.2使用模式</h4><h5 id="2-2-1堆缓冲区"><a href="#2-2-1堆缓冲区" class="headerlink" title="2.2.1堆缓冲区"></a>2.2.1堆缓冲区</h5><p>将<code>ByteBuf</code>存入<strong>JVM</strong>的堆空间.能够在没有池化的情况下提供快速的分配和释放.</p>
+<p>除此之外,ByteBuf的堆缓冲区还提供了一个后备数组(backing array).后备数组和ByteBuf中的数据是对应的,如果修改了<code>backing array</code>中的数据,<code>ByteBuf</code>中的数据是同步的.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ByteBuf heapBuf = Unpooled.buffer(<span class="number">1024</span>);</span><br><span class="line">        <span class="keyword">if</span>(heapBuf.hasArray())&#123;</span><br><span class="line">            heapBuf.writeBytes(<span class="string">"Hello,heapBuf"</span>.getBytes());</span><br><span class="line">            System.out.println(<span class="string">"数组第一个字节在缓冲区中的偏移量:"</span>+heapBuf.arrayOffset());</span><br><span class="line">            System.out.println(<span class="string">"缓冲区中的readerIndex:"</span>+heapBuf.readerIndex());</span><br><span class="line">            System.out.println(<span class="string">"writerIndex:"</span>+heapBuf.writerIndex());</span><br><span class="line">            System.out.println(<span class="string">"缓冲区中的可读字节数:"</span>+heapBuf.readableBytes());<span class="comment">//等于writerIndex-readerIndex</span></span><br><span class="line">            <span class="keyword">byte</span>[] array = heapBuf.array();</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; heapBuf.readableBytes();i++)&#123;</span><br><span class="line">                System.out.print((<span class="keyword">char</span>) array[i]);</span><br><span class="line">                <span class="keyword">if</span>(i==<span class="number">5</span>)&#123;</span><br><span class="line">                    array[i] = (<span class="keyword">int</span>)<span class="string">'.'</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//不会修改readerIndex位置</span></span><br><span class="line">            System.out.println(<span class="string">"\n读取数据后的readerIndex:"</span>+heapBuf.readerIndex());</span><br><span class="line">            <span class="comment">//读取缓冲区的数据,查看是否将逗号改成了句号</span></span><br><span class="line">            <span class="keyword">while</span> (heapBuf.isReadable())&#123;</span><br><span class="line">                System.out.print((<span class="keyword">char</span>) heapBuf.readByte());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<p>输出:</p>
+<figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">数组第一个字节在缓冲区中的偏移量:<span class="number">0</span></span><br><span class="line">缓冲区中的readerIndex:<span class="number">0</span></span><br><span class="line">writerIndex:<span class="number">13</span></span><br><span class="line">缓冲区中的可读字节数:<span class="number">13</span></span><br><span class="line">Hello,heapBuf</span><br><span class="line">读取数据后的readerIndex:<span class="number">0</span></span><br><span class="line">Hello<span class="variable">.heapBuf</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>如果<code>hasArray()</code>返回<code>false</code>,尝试访问backing array会报错</p>
+</blockquote>
+<h5 id="2-2-2直接缓冲区"><a href="#2-2-2直接缓冲区" class="headerlink" title="2.2.2直接缓冲区"></a>2.2.2直接缓冲区</h5><p>直接缓冲区存储于<strong>JVM堆外</strong>的内存空间.这样做有一个好处,当你想把JVM中的数据写给socket,需要将数据复制到直接缓冲区(JVM堆外内存)再交给socket.如果使用直接缓冲区,将减少复制这一过程.</p>
+<p>但是直接缓冲区也是有不足的,与JVM堆的缓冲区相比,他们的分配和释放是比较昂贵的.而且还有一个缺点,面对遗留代码的时候,可能不确定ByteBuf使用的是直接缓冲区还是堆缓冲区,你可能需要进行一次额外的复制.如代码示例.</p>
+<p>与自带后备数组的堆缓冲区来讲,这要多做一些工作.所以,如果确定容器中的数据会被作为数组来访问,你可能更愿意使用堆内存.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实际上你不知道从哪获得的引用,这可能是一个直接缓冲区的ByteBuf</span></span><br><span class="line"><span class="comment">//忽略Unpooled.buffer方法,当做不知道从哪获得的directBuf</span></span><br><span class="line">ByteBuf directBuf = Unpooled.buffer(<span class="number">1024</span>); </span><br><span class="line"><span class="comment">//如果想要从数组中访问数据,需要将直接缓冲区中的数据手动复制到数组中</span></span><br><span class="line">      <span class="keyword">if</span> (!directBuf.hasArray()) &#123;</span><br><span class="line">          <span class="keyword">int</span> length = directBuf.readableBytes();</span><br><span class="line">          <span class="keyword">byte</span>[] array = <span class="keyword">new</span> <span class="keyword">byte</span>[length];</span><br><span class="line">          directBuf.getBytes(directBuf.readerIndex(), array);</span><br><span class="line">          handleArray(array, <span class="number">0</span>, length);</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure>
+<h5 id="2-2-3符合缓冲区-CompositeByteBuf"><a href="#2-2-3符合缓冲区-CompositeByteBuf" class="headerlink" title="2.2.3符合缓冲区(CompositeByteBuf)"></a>2.2.3符合缓冲区(CompositeByteBuf)</h5><p>聚合缓冲区是个非常好用的东西,是多个ByteBuf的聚合视图,可以添加或删除ByteBuf实例.</p>
+<blockquote>
+<p>CompositeByteBuf中的ByteBuf实例可能同事包含直接内存分配和非直接内存分配.如果其中只有一个实例,那么调用CompositeByteBuf中的<code>hasArray()</code>方法将返回该组件上的<code>hasArray()</code>方法的值,否则返回<code>false</code></p>
+</blockquote>
+<p>多个ByteBuf组成一个完整的消息是很常见的,比如<code>header</code>和<code>body</code>组成的HTTP协议传输的消息.消息中的<code>body</code>有时候可能能重用,我们不想每次都创建重复的<code>body</code>,我们可以通过CompositeByteBuf来复用<code>body</code>.</p>
+<p>对比一下JDK中的<code>ByteBuffer</code>实现复合缓冲区和Netty中的<code>CompositeByteBuf</code>.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//JDK版本实现复合缓冲区</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">byteBufferComposite</span><span class="params">(ByteBuffer header, ByteBuffer body)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//使用一个数组来保存消息的各个部分</span></span><br><span class="line">        ByteBuffer[] message =  <span class="keyword">new</span> ByteBuffer[]&#123; header, body &#125;;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 创建一个新的ByteBuffer来复制合并header和body</span></span><br><span class="line">        ByteBuffer message2 =</span><br><span class="line">                ByteBuffer.allocate(header.remaining() + body.remaining());</span><br><span class="line">        message2.put(header);</span><br><span class="line">        message2.put(body);</span><br><span class="line">        message2.flip();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Netty中的CompositeByteBuf</span></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">byteBufComposite</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        CompositeByteBuf messageBuf = Unpooled.compositeBuffer();</span><br><span class="line">        ByteBuf headerBuf = Unpooled.buffer(<span class="number">1024</span>); <span class="comment">// 可能是直接缓存也可能是堆缓存中的</span></span><br><span class="line">        ByteBuf bodyBuf = Unpooled.buffer(<span class="number">1024</span>);   <span class="comment">// 可能是直接缓存也可能是堆缓存中的</span></span><br><span class="line">        messageBuf.addComponents(headerBuf, bodyBuf);</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">        messageBuf.removeComponent(<span class="number">0</span>); <span class="comment">// remove the header</span></span><br><span class="line">        <span class="keyword">for</span> (ByteBuf buf : messageBuf) &#123;</span><br><span class="line">            System.out.println(buf.toString());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p><code>CompositeByteBuf</code>不支持访问其后备数组,所以访问<code>CompositeByteBuf</code>中的数据类似于访问直接缓冲区</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">CompositeByteBuf compBuf = Unpooled.compositeBuffer();</span><br><span class="line"><span class="keyword">int</span> length = compBuf.readableBytes();</span><br><span class="line"><span class="keyword">byte</span>[] array = <span class="keyword">new</span> <span class="keyword">byte</span>[length];</span><br><span class="line"><span class="comment">//将CompositeByteBuf中的数据复制到数组中</span></span><br><span class="line">compBuf.getBytes(compBuf.readerIndex(), array);</span><br><span class="line"><span class="comment">//处理一下数组中的数据</span></span><br><span class="line">handleArray(array, <span class="number">0</span>, array.length);</span><br></pre></td></tr></table></figure>
+<p>Netty使用<code>CompositeByteBuf</code>来优化socket的IO操作,避免了JDK缓冲区实现所导致的性能和内存使用率的缺陷.内存使用率的缺陷是指对可复用对象大量的复制,Netty对其在内部做了优化,虽然没有暴露出来,但是应该知道CompositeByteBuf的优势和JDK自带工具的弊端.</p>
+<blockquote>
+<p>JDK的NIO包中提供了Scatter/Gather I/O技术,字面意思是打散和聚合,可以理解为把单个ByteBuffer切分成多个或者把多个ByteBuffer合并成一个.</p>
+</blockquote>
+<h3 id="3-字节级操作"><a href="#3-字节级操作" class="headerlink" title="3.字节级操作"></a>3.字节级操作</h3><p>ByteBuf的索引从0开始,最后一个索引是<code>capacity()-1</code>.</p>
+<p>遍历演示</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ByteBuf buffer = Unpooled.buffer(<span class="number">1024</span>); </span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; buffer.capacity(); i++) &#123;</span><br><span class="line">    <span class="keyword">byte</span> b = buffer.getByte(i);<span class="comment">//这种方法不会移动readerIndex指针</span></span><br><span class="line">    System.out.println((<span class="keyword">char</span>) b);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="3-1readerIndex和writerIndex"><a href="#3-1readerIndex和writerIndex" class="headerlink" title="3.1readerIndex和writerIndex"></a>3.1readerIndex和writerIndex</h4><p>JDK中的<code>ByteBuffer</code>只有一个索引,需要通过<code>flip()</code>来切换读写操作,Netty中的<code>ByteBuf</code>既有读索引,也有写索引,通过两个索引把ByteBuf划分了三部分.</p>
+<p><img src="https://note.youdao.com/yws/api/personal/file/F82D62BF4B9E4AD8BCF6F9F9B63D29E1?method=download&amp;shareKey=952006455eadac7758f7ae04b1d59c7f" alt></p>
+<p>可以调用<code>discardReadBytes()</code>方法可丢弃可丢弃字节并回收空间.</p>
+<p>调用<code>discardReadBytes()</code>方法之后</p>
+<p><img src="https://note.youdao.com/yws/api/personal/file/E6A068B1C5CB4A949911943A989D9892?method=download&amp;shareKey=952006455eadac7758f7ae04b1d59c7f" alt></p>
+<p>使用<code>read*</code>或<code>skip*</code>方法都会增加<code>readerIndex</code>.</p>
+<p>移动<code>readerIndex</code>读取可读数据的方式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ByteBuf buffer = ...;</span><br><span class="line"><span class="keyword">while</span> (buffer.isReadable()) &#123;</span><br><span class="line">    System.out.println(buffer.readByte());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>write*</code>方法写入<code>ByteBuf</code>时会增加writerIndex,如果超过容量会抛出<code>IndexOutOfBoundException</code>.</p>
+<p><code>writeableBytes()</code>可以返回可写字节数.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ByteBuf buffer = ...;</span><br><span class="line"><span class="keyword">while</span> (buffer.writableBytes() &gt;= <span class="number">4</span>) &#123;</span><br><span class="line">	buffer.writeInt(random.nextInt());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="3-2索引管理"><a href="#3-2索引管理" class="headerlink" title="3.2索引管理"></a>3.2索引管理</h4><blockquote>
+<p>JDK 的<code>InputStream</code> 定义了 <code>mark(int readlimit)</code>和<code>reset()</code>方法，这些方法分别被用来将流中的当前位置标记为指定的值，以及将流重置到该位置。<br>同样，可以通过调用 <code>markReaderIndex()</code>、<code>markWriterIndex()</code>、 <code>resetWriterIndex()</code>和<code>resetReaderIndex()</code>来标记和重置 <code>ByteBuf</code>的<code>readerIndex</code>和 <code>writerIndex</code>。这些和<code>InputStream</code>上的调用类似，只是没有<code>readlimit</code> 参数来指定标记什么时候失效。 </p>
+</blockquote>
+<p>如果将索引设置到一个无效位置会抛出<code>IndexOutOfBoundsException</code>.</p>
+<p>可以通过<code>clear()</code>归零索引,归零索引不会清除数据.</p>
+<h4 id="3-3查找"><a href="#3-3查找" class="headerlink" title="3.3查找"></a>3.3查找</h4><p>ByteBuf中很多方法可以确定<strong>值</strong>的索引,如<code>indexOf()</code>.</p>
+<p>复杂查找可以通过那些需要一个<code>ByteBufProcessor</code>作为参数的方法完成.这个接口应该可以使用<code>lambda</code>表达式(但是我现在使用的Netty4.1.12已经废弃了该接口,应该使用<code>ByteProcessor</code>).</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ByteBuf buffer = ...;</span><br><span class="line"><span class="keyword">int</span> index = buffer.forEachByte(ByteProcessor.FIND_CR);</span><br></pre></td></tr></table></figure>
+<h4 id="3-4派生缓冲区"><a href="#3-4派生缓冲区" class="headerlink" title="3.4派生缓冲区"></a>3.4派生缓冲区</h4><p>派生缓冲区就是,基于原缓冲区一顿操作生成新缓冲区.比如复制,切分等等.</p>
+<p><code>duplicate()</code>；<code>slice()</code>； <code>slice(int, int)</code>;<code>Unpooled.unmodifiableBuffer(…)</code>;<code>order(ByteOrder)</code>； <code>readSlice(int)</code>.</p>
+<blockquote>
+<p>每个这些方法都将返回一个新的 ByteBuf 实例，它具有自己的读索引、写索引和标记<br>索引。 其内部存储和 JDK 的 ByteBuffer 一样也是共享的。这使得派生缓冲区的创建成本<br>是很低廉的，但是这也意味着，如果你修改了它的内容，也同时修改了其对应的源实例，所<br>以要小心 </p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//复制</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">byteBufCopy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Charset utf8 = Charset.forName(<span class="string">"UTF-8"</span>);</span><br><span class="line">        ByteBuf buf = Unpooled.copiedBuffer(<span class="string">"Netty in Action rocks!"</span>, utf8);</span><br><span class="line">        ByteBuf copy = buf.copy(<span class="number">0</span>, <span class="number">15</span>);</span><br><span class="line">        System.out.println(copy.toString(utf8));</span><br><span class="line">        buf.setByte(<span class="number">0</span>, (<span class="keyword">byte</span>)<span class="string">'J'</span>);</span><br><span class="line">        <span class="keyword">assert</span> buf.getByte(<span class="number">0</span>) != copy.getByte(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//切片</span></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">byteBufSlice</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Charset utf8 = Charset.forName(<span class="string">"UTF-8"</span>);</span><br><span class="line">        ByteBuf buf = Unpooled.copiedBuffer(<span class="string">"Netty in Action rocks!"</span>, utf8);</span><br><span class="line">        ByteBuf sliced = buf.slice(<span class="number">0</span>, <span class="number">15</span>);</span><br><span class="line">        System.out.println(sliced.toString(utf8));</span><br><span class="line">        buf.setByte(<span class="number">0</span>, (<span class="keyword">byte</span>)<span class="string">'J'</span>);</span><br><span class="line">        <span class="keyword">assert</span> buf.getByte(<span class="number">0</span>) == sliced.getByte(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>还有一些读写操作的API,留在文末展示吧.</p>
+<h3 id="4-ByteBufHolder接口"><a href="#4-ByteBufHolder接口" class="headerlink" title="4.ByteBufHolder接口"></a>4.ByteBufHolder接口</h3><blockquote>
+<p>我们经常发现， 除了实际的数据负载之外， 我们还需要存储各种属性值。 HTTP 响应便是一个很好的例子， 除了表示为字节的内容，还包括状态码、 cookie 等。<br>为了处理这种常见的用例， Netty 提供了 ByteBufHolder。 ByteBufHolder 也为 Netty 的高级特性提供了支持，如缓冲区池化，其中可以从池中借用 ByteBuf， 并且在需要时自动释放。ByteBufHolder 只有几种用于访问底层数据和引用计数的方法。 </p>
+</blockquote>
+<p><img src="https://note.youdao.com/yws/api/personal/file/B261AE020F7B48D386C6E6F20E33AD75?method=download&amp;shareKey=952006455eadac7758f7ae04b1d59c7f" alt></p>
+<h3 id="5-ByteBuf的分配"><a href="#5-ByteBuf的分配" class="headerlink" title="5.ByteBuf的分配"></a>5.ByteBuf的分配</h3><p>我们可以通过<code>ByteBufAllocator</code>来分配一个<code>ByteBuf</code>实例.<code>ByteBufAllocator</code>接口实现了ByteBuf的池化.</p>
+<p>可以通过 <code>Channel</code>（每个都可以有一个不同的 <code>ByteBufAllocator</code>实例）或者绑定到<code>ChannelHandler</code> 的 <code>ChannelHandlerContext</code>获取一个到<code>ByteBufAllocator</code>的引用。 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//从Channel获取一个ByteBufAllocator的引用</span></span><br><span class="line">Channel channel = ...;</span><br><span class="line">ByteBufAllocator allocator = channel.alloc();</span><br><span class="line">....</span><br><span class="line"><span class="comment">//从ChannelHandlerContext获取ByteBufAllocator 的引用</span></span><br><span class="line">ChannelHandlerContext ctx = ...;</span><br><span class="line">ByteBufAllocator allocator2 = ctx.alloc();</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Netty提供了两种ByteBufAllocator的实现： PooledByteBufAllocator和UnpooledByteBufAllocator。前者池化了ByteBuf的实例以提高性能并最大限度地减少内存碎片。 后者的实现不 池化ByteBuf实例， 并且在每次它被调用时都会返回一个新的实例。 </p>
+</blockquote>
+<p>默认使用的是<code>PooledByteBufAllocator</code>,可以通过<code>ChannelConfig</code>修改.</p>
+<p><strong>Unpooled缓冲区</strong></p>
+<p>可能有时候拿不到<code>ByteBufAllocator</code>引用的话,可以使用Unpooled工具类来创建未持化<code>ByteBuf</code>实例.</p>
+<p><strong>ByteBufUtil类</strong></p>
+<blockquote>
+<p>ByteBufUtil 提供了用于操作 ByteBuf 的静态的辅助方法。因为这个 API 是通用的， 并且和池化无关，所以这些方法已然在分配类的外部实现。<br>这些静态方法中最有价值的可能就是 hexdump()方法， 它以十六进制的表示形式打印ByteBuf 的内容。这在各种情况下都很有用，例如， 出于调试的目的记录 ByteBuf 的内容。十六进制的表示通常会提供一个比字节值的直接表示形式更加有用的日志条目，此外，十六进制的版本还可以很容易地转换回实际的字节表示。<br>另一个有用的方法是 boolean equals(ByteBuf, ByteBuf)， 它被用来判断两个 ByteBuf实例的相等性。如果你实现自己的 ByteBuf 子类，你可能会发现 ByteBufUtil 的其他有用方法。 </p>
+</blockquote>
+<h4 id="6-引用计数"><a href="#6-引用计数" class="headerlink" title="6.引用计数"></a>6.引用计数</h4><blockquote>
+<p>引用计数是一种通过在某个对象所持有的资源不再被其他对象引用时释放该对象所持有的资源来优化内存使用和性能的技术。 它们都实现了 interface ReferenceCounted。 引用计数背后的想法并不是特别的复杂；它主要涉及跟踪到某个特定对象的活动引用的数量。一个 ReferenceCounted 实现的实例将通常以活动的引用计数为 1 作为开始。只要引用计数大于 0， 就能保证对象不会被释放。当活动引用的数量减少到 0 时，该实例就会被释放。注意，虽然释放的确切语义可能是特定于实现的，但是至少已经释放的对象应该不可再用了。 </p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//从Channel获取ByteBufAllocator</span></span><br><span class="line">Channel channel = ...;</span><br><span class="line">ByteBufAllocator allocator = channel.alloc();</span><br><span class="line">....</span><br><span class="line"><span class="comment">//从ByteBufAllocator分配一个ByteBuf</span></span><br><span class="line">ByteBuf buffer = allocator.directBuffer();</span><br><span class="line"><span class="keyword">assert</span> buffer.refCnt() == <span class="number">1</span>;<span class="comment">//引用计数是否为1</span></span><br></pre></td></tr></table></figure>
+<h3 id="7-API"><a href="#7-API" class="headerlink" title="7.API"></a>7.API</h3><h4 id="ByteBuf"><a href="#ByteBuf" class="headerlink" title="ByteBuf"></a>ByteBuf</h4><p><img src="https://note.youdao.com/yws/api/personal/file/CF647FAEE0C642CABCFC1329454F9A3C?method=download&amp;shareKey=952006455eadac7758f7ae04b1d59c7f" alt></p>
+<p><img src="https://note.youdao.com/yws/api/personal/file/FD2B630F7AFF4B8C85E86467EFE53765?method=download&amp;shareKey=952006455eadac7758f7ae04b1d59c7f" alt></p>
+<p><img src="https://note.youdao.com/yws/api/personal/file/64A587980C8748B5AFA674BCF223D953?method=download&amp;shareKey=952006455eadac7758f7ae04b1d59c7f" alt></p>
+<p><img src="https://note.youdao.com/yws/api/personal/file/44DF026ABA3545C5AC63D096043BF880?method=download&amp;shareKey=952006455eadac7758f7ae04b1d59c7f" alt></p>
+<p><img src="https://note.youdao.com/yws/api/personal/file/7762FDB1C0854B519C65B6DD9C1B53E7?method=download&amp;shareKey=952006455eadac7758f7ae04b1d59c7f" alt></p>
+<h4 id="ByteBufAllocator"><a href="#ByteBufAllocator" class="headerlink" title="ByteBufAllocator"></a>ByteBufAllocator</h4><p><img src="https://note.youdao.com/yws/api/personal/file/758F1B1A5A6F4D238012C7F79A0B7BC6?method=download&amp;shareKey=952006455eadac7758f7ae04b1d59c7f" alt></p>
+<h4 id="Unpooled"><a href="#Unpooled" class="headerlink" title="Unpooled"></a>Unpooled</h4><p><img src="https://note.youdao.com/yws/api/personal/file/F05DD429F5E144C5B3175CF96E572539?method=download&amp;shareKey=952006455eadac7758f7ae04b1d59c7f" alt></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Netty/" rel="tag"># Netty</a>
+          
+            <a href="/tags/Netty-in-action/" rel="tag"># Netty in action</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Tikko</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Netty之ByteBuf"><span class="nav-number">1.</span> <span class="nav-text">Netty之ByteBuf</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-ByteBuf特点概览"><span class="nav-number">1.1.</span> <span class="nav-text">1.ByteBuf特点概览</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-ByteBuf类介绍"><span class="nav-number">1.2.</span> <span class="nav-text">2.ByteBuf类介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1工作模式"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1工作模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2使用模式"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2使用模式</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-1堆缓冲区"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">2.2.1堆缓冲区</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-2直接缓冲区"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">2.2.2直接缓冲区</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-3符合缓冲区-CompositeByteBuf"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">2.2.3符合缓冲区(CompositeByteBuf)</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-字节级操作"><span class="nav-number">1.3.</span> <span class="nav-text">3.字节级操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1readerIndex和writerIndex"><span class="nav-number">1.3.1.</span> <span class="nav-text">3.1readerIndex和writerIndex</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2索引管理"><span class="nav-number">1.3.2.</span> <span class="nav-text">3.2索引管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-3查找"><span class="nav-number">1.3.3.</span> <span class="nav-text">3.3查找</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-4派生缓冲区"><span class="nav-number">1.3.4.</span> <span class="nav-text">3.4派生缓冲区</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-ByteBufHolder接口"><span class="nav-number">1.4.</span> <span class="nav-text">4.ByteBufHolder接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-ByteBuf的分配"><span class="nav-number">1.5.</span> <span class="nav-text">5.ByteBuf的分配</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#6-引用计数"><span class="nav-number">1.5.1.</span> <span class="nav-text">6.引用计数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-API"><span class="nav-number">1.6.</span> <span class="nav-text">7.API</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ByteBuf"><span class="nav-number">1.6.1.</span> <span class="nav-text">ByteBuf</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ByteBufAllocator"><span class="nav-number">1.6.2.</span> <span class="nav-text">ByteBufAllocator</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Unpooled"><span class="nav-number">1.6.3.</span> <span class="nav-text">Unpooled</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Tikko</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
