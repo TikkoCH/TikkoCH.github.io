@@ -79,13 +79,13 @@
 
 
 
-<meta name="description" content="Netty之ByteBuf本文内容主要参考&amp;lt;\&amp;gt;,偏笔记向. 网络编程中,字节缓冲区是一个比较基本的组件.Java NIO提供了ByteBuffer,但是使用过的都知道ByteBuffer对于读写数据操作还是有些麻烦的,切换读写状态需要flip().Netty框架对字节缓冲区进行了封装,名称是ByteBuf,相较于ByteBuffer更灵活.">
+<meta name="description" content="Netty之ByteBuf本文内容主要参考Netty In Action,偏笔记向. 网络编程中,字节缓冲区是一个比较基本的组件.Java NIO提供了ByteBuffer,但是使用过的都知道ByteBuffer对于读写数据操作还是有些麻烦的,切换读写状态需要flip().Netty框架对字节缓冲区进行了封装,名称是ByteBuf,相较于ByteBuffer更灵活.">
 <meta name="keywords" content="Netty,Netty in action">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Netty之ByteBuf">
 <meta property="og:url" content="http://yoursite.com/2019/04/18/Netty之ByteBuf/index.html">
 <meta property="og:site_name" content="Tikko&#39;s Blog">
-<meta property="og:description" content="Netty之ByteBuf本文内容主要参考&amp;lt;\&amp;gt;,偏笔记向. 网络编程中,字节缓冲区是一个比较基本的组件.Java NIO提供了ByteBuffer,但是使用过的都知道ByteBuffer对于读写数据操作还是有些麻烦的,切换读写状态需要flip().Netty框架对字节缓冲区进行了封装,名称是ByteBuf,相较于ByteBuffer更灵活.">
+<meta property="og:description" content="Netty之ByteBuf本文内容主要参考Netty In Action,偏笔记向. 网络编程中,字节缓冲区是一个比较基本的组件.Java NIO提供了ByteBuffer,但是使用过的都知道ByteBuffer对于读写数据操作还是有些麻烦的,切换读写状态需要flip().Netty框架对字节缓冲区进行了封装,名称是ByteBuf,相较于ByteBuffer更灵活.">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/F82D62BF4B9E4AD8BCF6F9F9B63D29E1?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
 <meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/E6A068B1C5CB4A949911943A989D9892?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
@@ -97,10 +97,10 @@
 <meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/7762FDB1C0854B519C65B6DD9C1B53E7?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
 <meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/758F1B1A5A6F4D238012C7F79A0B7BC6?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
 <meta property="og:image" content="https://note.youdao.com/yws/api/personal/file/F05DD429F5E144C5B3175CF96E572539?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
-<meta property="og:updated_time" content="2019-04-18T03:31:25.100Z">
+<meta property="og:updated_time" content="2019-04-18T04:40:45.037Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Netty之ByteBuf">
-<meta name="twitter:description" content="Netty之ByteBuf本文内容主要参考&amp;lt;\&amp;gt;,偏笔记向. 网络编程中,字节缓冲区是一个比较基本的组件.Java NIO提供了ByteBuffer,但是使用过的都知道ByteBuffer对于读写数据操作还是有些麻烦的,切换读写状态需要flip().Netty框架对字节缓冲区进行了封装,名称是ByteBuf,相较于ByteBuffer更灵活.">
+<meta name="twitter:description" content="Netty之ByteBuf本文内容主要参考Netty In Action,偏笔记向. 网络编程中,字节缓冲区是一个比较基本的组件.Java NIO提供了ByteBuffer,但是使用过的都知道ByteBuffer对于读写数据操作还是有些麻烦的,切换读写状态需要flip().Netty框架对字节缓冲区进行了封装,名称是ByteBuf,相较于ByteBuffer更灵活.">
 <meta name="twitter:image" content="https://note.youdao.com/yws/api/personal/file/F82D62BF4B9E4AD8BCF6F9F9B63D29E1?method=download&shareKey=952006455eadac7758f7ae04b1d59c7f">
 
 
@@ -348,8 +348,19 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/网络/" itemprop="url" rel="index">
-                    <span itemprop="name">网络</span>
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/netty/" itemprop="url" rel="index">
+                    <span itemprop="name">netty</span>
                   </a>
                 </span>
 
@@ -385,7 +396,7 @@
       
 
       
-        <h2 id="Netty之ByteBuf"><a href="#Netty之ByteBuf" class="headerlink" title="Netty之ByteBuf"></a>Netty之ByteBuf</h2><p>本文内容主要参考<strong>&lt;\<netty in action\>&gt;</netty></strong>,偏笔记向.</p>
+        <h2 id="Netty之ByteBuf"><a href="#Netty之ByteBuf" class="headerlink" title="Netty之ByteBuf"></a>Netty之ByteBuf</h2><p>本文内容主要参考<strong>Netty In Action</strong>,偏笔记向.</p>
 <p>网络编程中,字节缓冲区是一个比较基本的组件.Java NIO提供了<code>ByteBuffer</code>,但是使用过的都知道<code>ByteBuffer</code>对于读写数据操作还是有些麻烦的,切换读写状态需要<code>flip()</code>.<strong>Netty</strong>框架对字节缓冲区进行了封装,名称是<code>ByteBuf</code>,相较于<code>ByteBuffer</code>更灵活.</p>
 <a id="more"></a>
 <h3 id="1-ByteBuf特点概览"><a href="#1-ByteBuf特点概览" class="headerlink" title="1.ByteBuf特点概览"></a>1.ByteBuf特点概览</h3><ul>
@@ -596,7 +607,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
